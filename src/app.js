@@ -5,7 +5,7 @@ const app = express()
 
 
 app.use("/app", (req, res) => {
-    res.send("app data")
+    res.send("app data hi")
 })
 
 app.listen("7000", () => {
