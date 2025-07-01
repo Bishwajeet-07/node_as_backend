@@ -5,16 +5,25 @@ const User = require("./models/user")
 
 const app = express()
 
+//middleware for req handle apply for all routes 
+app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-    const user = new User({
-        firstName: "Bishwajeet",
-        lastName: "maurya",
-        emailId: "kumar@gmail.com",
-        password: "hi123",
-        age: 22,
-        gender: "male"
-    })
+    const user = new User(
+        // ** for Dynamic 
+        req.body
+
+        //**** static data */
+        // {
+        // firstName: "Bishwajeet",
+        // lastName: "maurya",
+        // emailId: "kumar@gmail.com",
+        // password: "hi123",
+        // age: 22,
+        // gender: "male"
+        // }
+
+    )
 
     try {
         await user.save();
