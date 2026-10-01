@@ -1,13 +1,25 @@
 import { useState } from "react"
 import Modal from "../ui/Modal"
 import { groupApi } from "../../services/api"
-import { UserPlus, AlertCircle, CheckCircle2 } from "lucide-react"
+import { UserPlus, AlertCircle, CheckCircle2, Users } from "lucide-react"
 
-export default function AddMemberModal({ isOpen, onClose, group, onMemberAdded }) {
+export default function AddMemberModal({
+  isOpen,
+  onClose,
+  group,
+  onMemberAdded,
+  friends = [],
+}) {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+
+  // Filter friends not currently in the group
+  const existingMemberIds = (group?.members || []).map((m) =>
+    typeof m === "object" ? m._id : m
+  )
+  const availableFriends = friends.filter((f) => !existingMemberIds.includes(f._id))
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -39,7 +51,7 @@ export default function AddMemberModal({ isOpen, onClose, group, onMemberAdded }
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Add Friend to "${group?.name || 'Group'}"`}>
+    <Modal isOpen={isOpen} onClose={onClose} title={`Add Friend to "${group?.name || "Group"}"`}>
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 flex items-start gap-2.5 text-rose-700 dark:text-rose-300 text-xs">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -55,6 +67,44 @@ export default function AddMemberModal({ isOpen, onClose, group, onMemberAdded }
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Quick Select Friends if any available */}
+        {availableFriends.length > 0 && (
+          <div className="space-y-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700">
+            <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Quick select from your saved friends:</span>
+            </span>
+            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+              {availableFriends.map((f) => {
+                const isSelected = email.toLowerCase() === f.email.toLowerCase()
+                return (
+                  <button
+                    key={f._id}
+                    type="button"
+                    onClick={() => setEmail(f.email)}
+                    className={`px-2.5 py-1 rounded-lg text-xs border flex items-center gap-1.5 transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-emerald-600 border-emerald-600 text-white font-medium shadow-xs"
+                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
+                    }`}
+                  >
+                    <span
+                      className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                        isSelected
+                          ? "bg-white/20 text-white"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                      }`}
+                    >
+                      {f.name ? f.name.charAt(0).toUpperCase() : "U"}
+                    </span>
+                    <span>{f.name}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         <div>
           <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
             Friend's Registered Email *

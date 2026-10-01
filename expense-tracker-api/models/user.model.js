@@ -22,11 +22,21 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
     },
+
+    // user.model.js ke schema mein add karo:
+    friends: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    ],
+
     defaultCurrency: {
         type: String,
         default: "INR",
         enum: ["USD", "EUR", "GBP", "INR", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "NZD"]
     }
 }, { timestamps: true });
+
 
 module.exports = mongoose.model('User', userSchema);

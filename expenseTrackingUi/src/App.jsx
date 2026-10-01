@@ -11,8 +11,9 @@ import GroupDetail from "./components/groups/GroupDetail"
 import CreateGroupModal from "./components/groups/CreateGroupModal"
 import CategoryManager from "./components/categories/CategoryManager"
 import AddCategoryModal from "./components/categories/AddCategoryModal"
+import FriendList from "./components/friends/FriendList"
 import ProfileView from "./components/profile/ProfileView"
-import { expenseApi, groupApi, categoryApi } from "./services/api"
+import { expenseApi, groupApi, categoryApi, friendApi } from "./services/api"
 import { AlertCircle, RefreshCw } from "lucide-react"
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
   const [expenses, setExpenses] = useState([])
   const [groups, setGroups] = useState([])
   const [categories, setCategories] = useState([])
+  const [friends, setFriends] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -41,10 +43,11 @@ export default function App() {
     setError("")
 
     try {
-      const [expRes, grpRes, catRes] = await Promise.allSettled([
+      const [expRes, grpRes, catRes, frndRes] = await Promise.allSettled([
         expenseApi.getMyExpenses(),
         groupApi.getMyGroups(),
         categoryApi.getCategories(),
+        friendApi.getMyFriends(),
       ])
 
       if (expRes.status === "fulfilled" && expRes.value?.success) {
@@ -64,6 +67,12 @@ export default function App() {
       } else if (catRes.status === "rejected") {
         console.warn("Categories fetch failed:", catRes.reason)
       }
+
+      if (frndRes.status === "fulfilled" && frndRes.value?.success) {
+        setFriends(frndRes.value.data || [])
+      } else if (frndRes.status === "rejected") {
+        console.warn("Friends fetch failed:", frndRes.reason)
+      }
     } catch (err) {
       setError(err.message || "Failed to load dashboard data.")
     } finally {
@@ -78,14 +87,47 @@ export default function App() {
   }, [token, loadInitialData])
 
   // Callbacks
-  const handleExpenseAdded = (newExpense) => {
-    setExpenses((prev) => [newExpense, ...prev])
+  const handleExpenseAdded = async (newExpense) => {
+    const catObj =
+      typeof newExpense.category === "object" && newExpense.category !== null
+        ? newExpense.category
+        : categories.find((c) => c._id === (newExpense.category?._id || newExpense.category)) || {
+            name: "General",
+            icon: "💸",
+            color: "#10b981",
+          }
+
+    const populatedExpense = {
+      ...newExpense,
+      category: catObj,
+    }
+
+    // Instant optimistic update for live display
+    setExpenses((prev) => [populatedExpense, ...prev.filter((e) => e._id !== populatedExpense._id)])
+
+    // Background sync with database to ensure exact sorted list
+    try {
+      const res = await expenseApi.getMyExpenses()
+      if (res && res.success && Array.isArray(res.data)) {
+        setExpenses(res.data)
+      }
+    } catch (err) {
+      console.warn("Background expense sync:", err)
+    }
   }
 
   const handleGroupCreated = (newGroup) => {
     setGroups((prev) => [newGroup, ...prev])
     setSelectedGroupId(newGroup._id)
     setCurrentTab("group-detail")
+  }
+
+  const handleFriendAdded = (newFriend) => {
+    if (!newFriend || !newFriend._id) return
+    setFriends((prev) => {
+      if (prev.some((f) => f._id === newFriend._id)) return prev
+      return [newFriend, ...prev]
+    })
   }
 
   const handleCategoryCreated = (newCat) => {
@@ -105,6 +147,12 @@ export default function App() {
   }
 
   const handleBackToGroups = () => {
+    setSelectedGroupId(null)
+    setCurrentTab("groups")
+  }
+
+  const handleGroupDeleted = (deletedGroupId) => {
+    setGroups((prev) => prev.filter((g) => g._id !== deletedGroupId))
     setSelectedGroupId(null)
     setCurrentTab("groups")
   }
@@ -158,6 +206,7 @@ export default function App() {
                 expenses={expenses}
                 groups={groups}
                 categories={categories}
+                friends={friends}
                 onNavigate={handleNavigate}
                 onOpenAddExpense={() => setIsAddExpenseModalOpen(true)}
                 onOpenCreateGroup={() => setIsCreateGroupModalOpen(true)}
@@ -180,6 +229,8 @@ export default function App() {
                 loading={loading}
                 onSelectGroup={handleSelectGroup}
                 onGroupCreated={handleGroupCreated}
+                friends={friends}
+                onFriendAdded={handleFriendAdded}
               />
             )}
 
@@ -187,7 +238,21 @@ export default function App() {
               <GroupDetail
                 groupId={selectedGroupId}
                 onBack={handleBackToGroups}
+                onGroupDeleted={handleGroupDeleted}
                 categories={categories}
+                friends={friends}
+                onFriendAdded={handleFriendAdded}
+              />
+            )}
+
+            {currentTab === "friends" && (
+              <FriendList
+                friends={friends}
+                groups={groups}
+                loading={loading}
+                onFriendAdded={handleFriendAdded}
+                onOpenCreateGroup={() => setIsCreateGroupModalOpen(true)}
+                onNavigate={handleNavigate}
               />
             )}
 
@@ -221,6 +286,8 @@ export default function App() {
         isOpen={isCreateGroupModalOpen}
         onClose={() => setIsCreateGroupModalOpen(false)}
         onGroupCreated={handleGroupCreated}
+        friends={friends}
+        onFriendAdded={handleFriendAdded}
       />
 
       <AddCategoryModal

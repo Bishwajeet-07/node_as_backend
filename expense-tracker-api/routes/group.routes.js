@@ -5,7 +5,9 @@ const {
     createGroup,
     getMyGroups,
     getGroupById,
-    addMember
+    addMember,
+    deleteGroup,
+    removeMember
 } = require('../controllers/group.controller')
 
 const authMiddleware = require('../middleware/auth.middleware')
@@ -17,5 +19,7 @@ router.post('/', createGroup)
 router.get('/', getMyGroups)
 router.get('/:id', getGroupById)
 router.post('/:id/members', addMember)
+router.delete('/:id', deleteGroup)
+router.delete('/:id/members/:memberId', removeMember)
 
 module.exports = router

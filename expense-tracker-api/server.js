@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+const seedDefaultCategories = require('./utils/seedCategories')
 
 const helmet = require("helmet");
 const morgan = require("morgan");
@@ -10,6 +11,7 @@ const categoryRoutes = require("./routes/category.routes");
 const expenseRoutes = require("./routes/expense.routes");
 const groupRoutes = require("./routes/group.routes");
 const groupExpenseRoutes = require("./routes/groupExpense.routes");
+const friendRoutes = require("./routes/friend.routes");
 
 
 const app = express();
@@ -45,7 +47,7 @@ app.use('/api/categories', categoryRoutes)
 app.use('/api/expenses', expenseRoutes)
 app.use('/api/groups', groupRoutes)
 app.use('/api/group-expenses', groupExpenseRoutes)
-
+app.use('/api/friends', friendRoutes)
 //centralized error handler middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
@@ -59,8 +61,9 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => {
+    .then(async () => {
         console.log("Connected to MongoDB");
+        await seedDefaultCategories(); // Seed default categories after successful DB connection
         app.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
         });

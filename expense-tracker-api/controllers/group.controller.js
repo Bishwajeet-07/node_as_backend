@@ -1,26 +1,41 @@
 const Group = require('../models/group.model')
 const User = require('../models/user.model')
+const GroupExpense = require('../models/groupExpense.model')
 const asyncHandler = require('../utils/asyncHandler')
 
 // 1. Naya Group Banao
+// 1. Naya Group Banao (Optionally Friends ki ID list pass kar sakte ho)
 const createGroup = asyncHandler(async (req, res) => {
-    const { name, description } = req.body
+    const { name, description, memberIds } = req.body // 👈 memberIds le sakte hain!
 
     if (!name) {
-        return res.status(400).json({ success: false, message: 'Group name is required!' })
+        return res.status(400).json({ success: false, message: 'Group name zaroori hai!' })
     }
 
-    // Group banane wala khud automatically pehla member hoga!
+    // Creator ko hamesha list mein rakho
+    const initialMembers = [req.user.userId]
+
+    // Agar user ne friend list se dost select karke bheje hain toh unhe bhi add karo:
+    if (memberIds && Array.isArray(memberIds)) {
+        memberIds.forEach((id) => {
+            if (id.toString() !== req.user.userId.toString() && !initialMembers.includes(id)) {
+                initialMembers.push(id)
+            }
+        })
+    }
+
     const group = await Group.create({
         name,
-        description,
+        description: description || '',
         createdBy: req.user.userId,
-        members: [req.user.userId] // Array mein creator ka ID dal diya
+        members: initialMembers
     })
+
+    await group.populate('members', 'name email avatar')
 
     res.status(201).json({
         success: true,
-        message: 'Group created successfully! 👥',
+        message: 'Group created successfully with selected friends! 👥🎉',
         data: group
     })
 })
@@ -99,9 +114,81 @@ const addMember = asyncHandler(async (req, res) => {
     })
 })
 
+// 5. Delete Group (Sirf Admin kar sakta hai + Cascade Delete)
+const deleteGroup = asyncHandler(async (req, res) => {
+    const groupId = req.params.id
+
+    const group = await Group.findById(groupId)
+    if (!group) {
+        return res.status(404).json({ success: false, message: 'Group nahi mila!' })
+    }
+
+    // 🛡️ ADMIN CHECK: Kya request bhejne wala wahi hai jisne group banaya?
+    if (group.createdBy.toString() !== req.user.userId.toString()) {
+        return res.status(403).json({
+            success: false,
+            message: 'Access Denied! Sirf Group Admin hi group delete kar sakta hai! 🚫'
+        })
+    }
+
+    // 🧹 CASCADE DELETE: Group ke saare kharche bhi database se saaf karo!
+    await GroupExpense.deleteMany({ group: groupId })
+
+    // Group delete karo
+    await Group.findByIdAndDelete(groupId)
+
+    res.status(200).json({
+        success: true,
+        message: 'Group aur uske saare expenses successfully delete ho gaye! 🗑️'
+    })
+})
+
+// 6. Member ko Group se Remove Karo (Admin nikaal sakta hai ya user khud leave kar sakta hai)
+const removeMember = asyncHandler(async (req, res) => {
+    const { id: groupId, memberId } = req.params
+
+    const group = await Group.findById(groupId)
+    if (!group) {
+        return res.status(404).json({ success: false, message: 'Group nahi mila!' })
+    }
+
+    // Admin ko group se nahi nikaala ja sakta!
+    if (memberId.toString() === group.createdBy.toString()) {
+        return res.status(400).json({
+            success: false,
+            message: 'Group Admin ko group se remove nahi kiya ja sakta!'
+        })
+    }
+
+    // Permission Check: Ya toh Admin nikaal raha ho, ya banda KHUD group chhod raha ho
+    const isAdmin = group.createdBy.toString() === req.user.userId.toString()
+    const isSelf = memberId.toString() === req.user.userId.toString()
+
+    if (!isAdmin && !isSelf) {
+        return res.status(403).json({
+            success: false,
+            message: 'Aapko kisi doosre member ko nikaalne ka haq nahi hai!'
+        })
+    }
+
+    // Member ko array se hatao
+    group.members = group.members.filter(m => m.toString() !== memberId.toString())
+    await group.save()
+
+    await group.populate('members', 'name email avatar')
+
+    res.status(200).json({
+        success: true,
+        message: isSelf ? 'Aapne group chhod diya! 👋' : 'Member ko group se nikaal diya gaya! 🚪',
+        data: group
+    })
+})
+
 module.exports = {
     createGroup,
     getMyGroups,
     getGroupById,
-    addMember
+    addMember,
+    deleteGroup,
+    removeMember
 }

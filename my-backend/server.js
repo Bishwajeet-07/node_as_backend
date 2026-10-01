@@ -21,7 +21,7 @@ app.use(helmet({
 
 // Middleware
 // 2. Strict CORS (Sirf tumhari Frontend Website ko allow karo)
-const allowedOrigins = ['http://localhost:5174'] // Tumhara React App URL
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:1974', 'http://localhost:1975', 'http://localhost:3000'] // Tumhara React App URL
 app.use(cors({
     origin: function (origin, callback) {
         // Postman ya same domain se empty origin aatha hai, use allow karo

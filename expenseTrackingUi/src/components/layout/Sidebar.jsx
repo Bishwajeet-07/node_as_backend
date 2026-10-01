@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Receipt,
   Users,
+  UserCheck,
   Tags,
   User,
   LogOut,
@@ -15,6 +16,7 @@ const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "expenses", label: "Personal Expenses", icon: Receipt },
   { id: "groups", label: "Split Groups", icon: Users },
+  { id: "friends", label: "Friends", icon: UserCheck },
   { id: "categories", label: "Categories", icon: Tags },
   { id: "profile", label: "Account", icon: User },
 ]

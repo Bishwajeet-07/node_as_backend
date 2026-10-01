@@ -290,7 +290,35 @@ Content-Type: application/json
    { "_id": "6abd07a05d71488c0ab4ea54", "name": "Rahul", "email": "rahul@example.com" }
    ]
    }
+   🔹 Remove Member from Group (Admin or Self Leave)
+   Method: DELETE
+   Endpoint: /api/groups/:id/members/:memberId
+   Access: Protected (Admin can remove any member, Member can remove self/leave)
+   Success Response (200 OK):
+   json
+   {
+     "success": true,
+     "message": "Member ko group se nikaal diya gaya! 🚪",
+     "data": { ...group }
    }
+
+   🔹 Delete Group (Admin Only + Cascade Delete)
+   Method: DELETE
+   Endpoint: /api/groups/:id
+   Access: Protected (Group Creator / Admin only)
+   Success Response (200 OK):
+   json
+   {
+     "success": true,
+     "message": "Group aur uske saare expenses successfully delete ho gaye! 🗑️"
+   }
+   Error Response (403 Forbidden - If non-admin tries):
+   json
+   {
+     "success": false,
+     "message": "Access Denied! Sirf Group Admin hi group delete kar sakta hai! 🚫"
+   }
+
 5. 🍕 Group Expense Splitting APIs
    🔹 Add Group Expense (Auto Equal Split)
    Method: POST

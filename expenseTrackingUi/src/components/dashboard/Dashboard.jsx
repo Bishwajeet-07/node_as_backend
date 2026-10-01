@@ -28,6 +28,7 @@ export default function Dashboard({
   expenses = [],
   groups = [],
   categories = [],
+  friends = [],
   onNavigate,
   onOpenAddExpense,
   onOpenCreateGroup,
@@ -45,10 +46,14 @@ export default function Dashboard({
 
     const map = {}
     expenses.forEach((e) => {
-      const catId = e.category?._id || e.category
-      const catName = e.category?.name || "Uncategorized"
-      const catIcon = e.category?.icon || "🏷️"
-      const catColor = e.category?.color || "#6366f1"
+      const catObj =
+        typeof e.category === "object" && e.category !== null
+          ? e.category
+          : categories.find((c) => c._id === (e.category?._id || e.category))
+      const catId = catObj?._id || e.category
+      const catName = catObj?.name || "Uncategorized"
+      const catIcon = catObj?.icon || "🏷️"
+      const catColor = catObj?.color || "#6366f1"
 
       if (!map[catId]) {
         map[catId] = {
@@ -133,22 +138,35 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* Card 2: Active Groups */}
+        {/* Card 2: Active Groups & Friends */}
         <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              Split Groups
+              Split Groups & Friends
             </span>
-            <div className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">
-              {groups.length}
+            <div className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100 flex items-baseline gap-2">
+              <span>{groups.length}</span>
+              <span className="text-xs font-sans font-normal text-slate-400">
+                groups &bull; {friends.length} friends
+              </span>
             </div>
-            <button
-              onClick={() => onNavigate("groups")}
-              className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-0.5 cursor-pointer"
-            >
-              <span>Manage split groups</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
+            <div className="flex items-center gap-2 pt-0.5">
+              <button
+                onClick={() => onNavigate("groups")}
+                className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+              >
+                <span>Groups</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+              <span className="text-slate-300 dark:text-slate-700">&bull;</span>
+              <button
+                onClick={() => onNavigate("friends")}
+                className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+              >
+                <span>Friends</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
           </div>
 
           <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20">
@@ -213,7 +231,10 @@ export default function Dashboard({
           ) : (
             <div className="space-y-2">
               {recentExpenses.map((exp) => {
-                const cat = exp.category
+                const cat =
+                  typeof exp.category === "object" && exp.category !== null
+                    ? exp.category
+                    : categories.find((c) => c._id === (exp.category?._id || exp.category))
                 const catColor = cat?.color || "#6366f1"
                 const PaymentIcon = PAYMENT_ICONS[exp.paymentMethod] || Smartphone
                 const expenseDate = exp.date || exp.createdAt

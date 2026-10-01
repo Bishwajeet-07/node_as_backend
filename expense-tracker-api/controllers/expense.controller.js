@@ -15,6 +15,8 @@ const createExpense = asyncHandler(async (req, res) => {
         notes
     })
 
+    await expense.populate('category', 'name icon color')
+
     res.status(201).json({
         success: true,
         message: 'Expense added successfully! 💸',

@@ -2,7 +2,14 @@ import { useState } from "react"
 import { Users, Plus, ArrowRight, ShieldCheck, Sparkles } from "lucide-react"
 import CreateGroupModal from "./CreateGroupModal"
 
-export default function GroupList({ groups = [], loading = false, onSelectGroup, onGroupCreated }) {
+export default function GroupList({
+  groups = [],
+  loading = false,
+  onSelectGroup,
+  onGroupCreated,
+  friends = [],
+  onFriendAdded,
+}) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const handleGroupCreated = (newGroup) => {
@@ -132,6 +139,8 @@ export default function GroupList({ groups = [], loading = false, onSelectGroup,
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onGroupCreated={handleGroupCreated}
+        friends={friends}
+        onFriendAdded={onFriendAdded}
       />
     </div>
   )

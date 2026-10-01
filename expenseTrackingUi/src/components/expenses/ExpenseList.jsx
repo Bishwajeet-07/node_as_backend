@@ -176,7 +176,10 @@ export default function ExpenseList({
       ) : (
         <div className="space-y-2.5">
           {filteredExpenses.map((expense) => {
-            const cat = expense.category
+            const cat =
+              typeof expense.category === "object" && expense.category !== null
+                ? expense.category
+                : categories.find((c) => c._id === (expense.category?._id || expense.category))
             const catColor = cat?.color || "#6366f1"
             const PaymentIcon = PAYMENT_ICONS[expense.paymentMethod] || Smartphone
             const expenseDate = expense.date || expense.createdAt

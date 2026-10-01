@@ -149,6 +149,16 @@ export const groupApi = {
       method: "POST",
       body: { email },
     }),
+
+  deleteGroup: (groupId) =>
+    apiClient(`/groups/${groupId}`, {
+      method: "DELETE",
+    }),
+
+  removeMember: (groupId, memberId) =>
+    apiClient(`/groups/${groupId}/members/${memberId}`, {
+      method: "DELETE",
+    }),
 }
 
 // 5. Group Expense Splitting APIs
@@ -160,4 +170,25 @@ export const groupExpenseApi = {
     }),
 
   getGroupExpenses: (groupId) => apiClient(`/group-expenses/group/${groupId}`),
+
+  getGroupBalances: (groupId) => apiClient(`/group-expenses/group/${groupId}/balances`),
+
+  settlePayment: (groupId, payload) =>
+    apiClient(`/group-expenses/group/${groupId}/settle`, {
+      method: "POST",
+      body: payload, // { receiverId, amount, paymentMethod, notes }
+    }),
+
+  getGroupSettlements: (groupId) => apiClient(`/group-expenses/group/${groupId}/settlements`),
+}
+
+// 6. Friend APIs
+export const friendApi = {
+  getMyFriends: () => apiClient("/friends"),
+
+  addFriend: (email) =>
+    apiClient("/friends", {
+      method: "POST",
+      body: { email },
+    }),
 }

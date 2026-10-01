@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Receipt,
   Users,
+  UserCheck,
   Tags,
   User,
 } from "lucide-react"
@@ -15,6 +16,7 @@ const MOBILE_NAV_ITEMS = [
   { id: "dashboard", label: "Overview", icon: LayoutDashboard },
   { id: "expenses", label: "Expenses", icon: Receipt },
   { id: "groups", label: "Groups", icon: Users },
+  { id: "friends", label: "Friends", icon: UserCheck },
   { id: "categories", label: "Categories", icon: Tags },
   { id: "profile", label: "Profile", icon: User },
 ]
