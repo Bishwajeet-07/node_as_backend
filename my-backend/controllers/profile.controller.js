@@ -1,58 +1,53 @@
 const User = require('../models/user.model');
+const asyncHandler = require('../utils/asyncHandler.js');
 
-const getProfile = async (req, res, next) => {
-    try {
-        const userId = req.user.userId; //  req.user.userId
-        const user = await User.findById(userId).select('-password');
+const getProfile = asyncHandler(async (req, res, next) => {
+    const userId = req.user.userId; //  req.user.userId
+    const user = await User.findById(userId).select('-password');
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        res.status(200).json({
-            success: true,
-            data: user
-        });
-    } catch (error) {
-        next(error); // Error middleware ko pass karo
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
     }
-}
 
-const updateProfile = async (req, res, next) => {
-    try {
-        const userId = req.user.userId; // 👈 req.user.userId
-        const { username, email, bio, phone } = req.body;
+    res.status(200).json({
+        success: true,
+        data: user
+    });
 
-        // Avatar URL banayein agar file upload hui hai
-        const avatarUrl = req.file ? `http://localhost:5000/uploads/${req.file.filename}` : undefined;
+})
 
-        const updatedData = {
-            username,
-            email,
-            bio,
-            phone
-        };
+const updateProfile = asyncHandler(async (req, res, next) => {
+    const userId = req.user.userId; // 👈 req.user.userId
+    const { username, email, bio, phone } = req.body;
 
-        // Agar avatar upload hua hai tabhi avatar field update karo
-        if (avatarUrl) {
-            updatedData.avatar = avatarUrl;
-        }
+    // Avatar URL banayein agar file upload hui hai
+    const avatarUrl = req.file ? `http://localhost:5000/uploads/${req.file.filename}` : undefined;
 
-        const user = await User.findByIdAndUpdate(userId, updatedData, { new: true }).select('-password');
+    const updatedData = {
+        username,
+        email,
+        bio,
+        phone
+    };
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: 'Profile updated successfully',
-            data: user
-        });
-    } catch (error) {
-        next(error);
+    // Agar avatar upload hua hai tabhi avatar field update karo
+    if (avatarUrl) {
+        updatedData.avatar = avatarUrl;
     }
+
+    const user = await User.findByIdAndUpdate(userId, updatedData, { new: true }).select('-password');
+
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+        data: user
+    });
 }
+)
 
 module.exports = {
     getProfile,

@@ -25,7 +25,14 @@ const createTodo = async (req, res, next) => {
 
 const updateTodo = async (req, res, next) => {
     try {
-        const todo = await Todo.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const todo = await Todo.findOneAndUpdate(
+            { _id: req.params.id, user: req.user.userId },  // Query Object
+            {
+                ...(req.body.title && { title: req.body.title.trim() }),
+                ...(req.body.completed !== undefined && { completed: req.body.completed })
+            },
+            { new: true } // Updated data wapas do
+        );
         if (!todo) {
             return res.status(404).json({ message: 'Todo not found' });
         }
@@ -37,7 +44,10 @@ const updateTodo = async (req, res, next) => {
 
 const deleteTodo = async (req, res, next) => {
     try {
-        const todo = await Todo.findByIdAndDelete(req.params.id);
+        const todo = await Todo.findOneAndDelete({
+            _id: req.params.id,
+            user: req.user.userId
+        });
         if (!todo) {
             return res.status(404).json({ message: 'Todo not found' });
         }

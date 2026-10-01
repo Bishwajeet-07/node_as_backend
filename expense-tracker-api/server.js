@@ -9,6 +9,7 @@ const authRoutes = require("./routes/auth.routes");
 const categoryRoutes = require("./routes/category.routes");
 const expenseRoutes = require("./routes/expense.routes");
 const groupRoutes = require("./routes/group.routes");
+const groupExpenseRoutes = require("./routes/groupExpense.routes");
 
 
 const app = express();
@@ -20,7 +21,7 @@ app.use(helmet({
 
 // cors middleware
 app.use(cors({
-    origin: ['http://localhost:1974', 'http://localhost:1975'],
+    origin: ['http://localhost:1974', 'http://localhost:1975', 'http://localhost:5173', 'http://localhost:3000'],
     credentials: true
 }));
 
@@ -43,6 +44,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/expenses', expenseRoutes)
 app.use('/api/groups', groupRoutes)
+app.use('/api/group-expenses', groupExpenseRoutes)
 
 //centralized error handler middleware
 app.use((err, req, res, next) => {
